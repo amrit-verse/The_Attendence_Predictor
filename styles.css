@@ -1,0 +1,398 @@
+/* ==========================================================================
+   EduTrack • iOS 18 Glassmorphism Dark Theme (Liquid Glass UI)
+   Apple Human Interface Guidelines Inspired Design System
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+:root {
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  
+  /* iOS Dark Glass Variables */
+  --ios-bg-base: #06070a;
+  --ios-glass-bg: rgba(22, 25, 38, 0.68);
+  --ios-glass-card-bg: rgba(26, 30, 46, 0.62);
+  --ios-glass-elevated: rgba(32, 38, 58, 0.75);
+  --ios-glass-border: rgba(255, 255, 255, 0.12);
+  --ios-glass-border-subtle: rgba(255, 255, 255, 0.07);
+  --ios-glass-highlight: inset 0 1px 1px 0 rgba(255, 255, 255, 0.18);
+  --ios-glass-blur: blur(28px) saturate(200%);
+  --ios-shadow-subtle: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
+  --ios-shadow-floating: 0 20px 50px -10px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--ios-bg-base);
+  color: #f1f5f9;
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* ==========================================================================
+   iOS Liquid Ambient Backdrop (Mesh Glow Lights)
+   ========================================================================== */
+.ios-ambient-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+  background-color: #06070a;
+}
+
+.ios-ambient-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(110px);
+  opacity: 0.45;
+  will-change: transform, opacity;
+  animation: floatOrb 18s ease-in-out infinite alternate;
+}
+
+.ios-orb-1 {
+  width: 550px;
+  height: 550px;
+  top: -100px;
+  left: -80px;
+  background: radial-gradient(circle, #4f46e5 0%, #312e81 60%, transparent 80%);
+  animation-duration: 22s;
+}
+
+.ios-orb-2 {
+  width: 600px;
+  height: 600px;
+  top: 15%;
+  right: -120px;
+  background: radial-gradient(circle, #7c3aed 0%, #4c1d95 60%, transparent 80%);
+  animation-duration: 26s;
+  animation-delay: -5s;
+}
+
+.ios-orb-3 {
+  width: 500px;
+  height: 500px;
+  bottom: 5%;
+  left: 20%;
+  background: radial-gradient(circle, #0284c7 0%, #0369a1 60%, transparent 80%);
+  animation-duration: 20s;
+  animation-delay: -10s;
+}
+
+.ios-orb-4 {
+  width: 420px;
+  height: 420px;
+  bottom: -60px;
+  right: 15%;
+  background: radial-gradient(circle, #059669 0%, #064e3b 60%, transparent 80%);
+  opacity: 0.28;
+  animation-duration: 24s;
+}
+
+@keyframes floatOrb {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(40px, 30px) scale(1.08); }
+  100% { transform: translate(-30px, 50px) scale(0.95); }
+}
+
+/* ==========================================================================
+   iOS Frosted Glass Components (Apple Liquid Glass)
+   ========================================================================== */
+
+/* Main Header Floating Dock */
+.ios-glass-header {
+  background: rgba(14, 16, 26, 0.72) !important;
+  backdrop-filter: var(--ios-glass-blur);
+  -webkit-backdrop-filter: var(--ios-glass-blur);
+  border-bottom: 1px solid var(--ios-glass-border);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.14), 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+}
+
+/* Glass Panels & Widgets */
+.glass-panel, .ios-glass-panel {
+  background: var(--ios-glass-bg) !important;
+  backdrop-filter: var(--ios-glass-blur) !important;
+  -webkit-backdrop-filter: var(--ios-glass-blur) !important;
+  border: 1px solid var(--ios-glass-border) !important;
+  box-shadow: var(--ios-glass-highlight), var(--ios-shadow-subtle) !important;
+  border-radius: 24px;
+}
+
+/* Interactive Subject / Metric Cards */
+.glass-card, .ios-glass-card {
+  background: var(--ios-glass-card-bg) !important;
+  backdrop-filter: var(--ios-glass-blur) !important;
+  -webkit-backdrop-filter: var(--ios-glass-blur) !important;
+  border: 1px solid var(--ios-glass-border-subtle) !important;
+  box-shadow: var(--ios-glass-highlight), 0 10px 28px -8px rgba(0, 0, 0, 0.45) !important;
+  border-radius: 22px;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.22s ease;
+}
+
+.glass-card:hover, .ios-glass-card:hover {
+  transform: translateY(-3px) scale(1.008);
+  border-color: rgba(255, 255, 255, 0.22) !important;
+  box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.25), 0 18px 40px -10px rgba(0, 0, 0, 0.7) !important;
+}
+
+/* iOS Segmented Controls Bar (Tabs) */
+.ios-segmented-bar {
+  background: rgba(14, 16, 26, 0.65);
+  backdrop-filter: var(--ios-glass-blur);
+  -webkit-backdrop-filter: var(--ios-glass-blur);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  padding: 4px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.ios-tab-pill {
+  padding: 8px 18px;
+  border-radius: 14px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  color: #94a3b8;
+  border: 1px solid transparent;
+}
+
+.ios-tab-pill:hover {
+  color: #f8fafc;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.ios-tab-pill.active {
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.12) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.22), 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* iOS Floating Pill Buttons */
+.ios-pill-btn {
+  border-radius: 9999px;
+  padding: 6px 14px;
+  font-weight: 600;
+  font-size: 12px;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: inset 0 1px 0.5px rgba(255, 255, 255, 0.15), 0 4px 12px rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ios-pill-btn:active {
+  transform: scale(0.95);
+}
+
+/* iOS Modals & Bottom Sheets */
+.ios-modal-sheet {
+  background: rgba(20, 24, 38, 0.88) !important;
+  backdrop-filter: blur(36px) saturate(220%) !important;
+  -webkit-backdrop-filter: blur(36px) saturate(220%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  border-radius: 28px !important;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.25), 0 25px 60px -15px rgba(0, 0, 0, 0.85) !important;
+}
+
+.ios-modal-handle {
+  width: 44px;
+  height: 5px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.22);
+  margin: 0 auto 12px auto;
+}
+
+/* ==========================================================================
+   iOS Control Center Sliders & Micro-Inputs
+   ========================================================================== */
+input[type=range] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  height: 28px;
+  cursor: pointer;
+}
+
+input[type=range]:focus {
+  outline: none;
+}
+
+input[type=range]::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 8px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 22px;
+  width: 22px;
+  border-radius: 50%;
+  background: #ffffff;
+  cursor: pointer;
+  margin-top: -7px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 0, 0, 0.1);
+  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.15s ease;
+}
+
+input[type=range]::-webkit-slider-thumb:hover {
+  transform: scale(1.18);
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.6), 0 0 0 2px #6366f1;
+}
+
+input[type=range]::-webkit-slider-thumb:active {
+  transform: scale(1.28);
+}
+
+/* Select and Date Inputs Glass Styling */
+select, input[type=date], input[type=number], input[type=text] {
+  background-color: rgba(20, 24, 38, 0.7) !important;
+  color: #f8fafc !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 14px !important;
+  backdrop-filter: blur(12px) !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+select:focus, input[type=date]:focus, input[type=number]:focus, input[type=text]:focus {
+  border-color: #6366f1 !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3), inset 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* ==========================================================================
+   Animations & Indicators
+   ========================================================================== */
+@keyframes alertPulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.75), 0 15px 35px -5px rgba(239, 68, 68, 0.4);
+    border-color: #ef4444;
+  }
+  50% {
+    box-shadow: 0 0 0 16px rgba(239, 68, 68, 0), 0 25px 45px -5px rgba(239, 68, 68, 0.7);
+    border-color: #b91c1c;
+  }
+}
+
+@keyframes sirenWiggle {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  20% { transform: rotate(-16deg) scale(1.18); }
+  40% { transform: rotate(14deg) scale(1.18); }
+  60% { transform: rotate(-10deg) scale(1.12); }
+  80% { transform: rotate(8deg) scale(1.06); }
+}
+
+@keyframes attendyWiggle {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-4px) rotate(-3deg); }
+  75% { transform: translateY(-2px) rotate(3deg); }
+}
+
+@keyframes aiGlowRing {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.55), 0 0 45px rgba(168, 85, 247, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 35px rgba(99, 102, 241, 0.85), 0 0 70px rgba(168, 85, 247, 0.65);
+  }
+}
+
+@keyframes chatSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-alert-pulse {
+  animation: alertPulseGlow 1.8s infinite ease-in-out;
+}
+
+.animate-siren {
+  animation: sirenWiggle 1s infinite ease-in-out;
+}
+
+.animate-ai-glow {
+  animation: aiGlowRing 2.8s infinite ease-in-out;
+}
+
+.animate-attendy {
+  animation: attendyWiggle 3s infinite ease-in-out;
+}
+
+.animate-chat-appear {
+  animation: chatSlideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Gauge SVG Animation */
+.gauge-circle {
+  transition: stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1), stroke 0.4s ease;
+}
+
+/* Smooth iOS Scrollbars */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Chart Canvas Sizing */
+.chart-container {
+  position: relative;
+  width: 100%;
+  height: 300px;
+}
+
+/* ==========================================================================
+   Print Styles for Official Attendance Audit Report
+   ========================================================================== */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  .ios-ambient-bg, header, footer, #aiChatToggleBtn, #aiChatDrawer, .nav-tab-btn, #themeToggleBtn, .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  .tab-content-panel {
+    display: block !important;
+  }
+  .glass-card, .glass-panel, .bg-white, .dark .bg-slate-900 {
+    box-shadow: none !important;
+    border: 1px solid #ccc !important;
+    background: white !important;
+    color: black !important;
+  }
+}

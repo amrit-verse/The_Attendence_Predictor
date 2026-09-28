@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EduTrack • Smart Attendance Calculator, OD Simulator &amp; AI Advisor</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Canvas Confetti CDN for Celebrations -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <!-- Custom iOS Glass Styles & Animations -->
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="text-slate-100 min-h-screen flex flex-col font-sans">
+
+  <!-- iOS Liquid Ambient Background -->
+  <div class="ios-ambient-bg no-print" aria-hidden="true">
+    <div class="ios-ambient-orb ios-orb-1"></div>
+    <div class="ios-ambient-orb ios-orb-2"></div>
+    <div class="ios-ambient-orb ios-orb-3"></div>
+    <div class="ios-ambient-orb ios-orb-4"></div>
+  </div>
+
+  <!-- All page content sits above ambient -->
+  <div class="relative z-10 flex flex-col min-h-screen">
+
+  <!-- Print-Only Academic Transcript Header -->
+  <div class="hidden print-only p-6 border-b-2 border-slate-900 mb-6">
+    <div class="flex justify-between items-center">
+      <div>
+        <h1 class="text-2xl font-black uppercase tracking-tight text-black">National Institute of Engineering &amp; Technology</h1>
+        <p class="text-sm font-semibold text-black">Office of Academic Affairs • Official Attendance Audit Report</p>
+        <p class="text-xs text-slate-500">Odd Semester 2026-2027 • Final Date Before Nov: October 31, 2026</p>
+      </div>
+      <div class="text-right text-xs text-black">
+        <p><strong>Generated Date:</strong> <span id="printDateStamp">Sep 28, 2026</span></p>
+        <p><strong>Status:</strong> <span id="printOverallStatus" class="font-bold">AUDITED</span></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       TOP NAV — iOS Liquid Glass Floating Dock
+       ═══════════════════════════════════════════ -->
+  <header class="sticky top-0 z-40 ios-glass-header no-print">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
+
+      <!-- Brand -->
+      <div class="flex items-center space-x-3 shrink-0">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-xl shadow-indigo-500/40 transform transition hover:scale-105 cursor-default">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <h1 class="text-base sm:text-lg font-extrabold tracking-tight text-white">EduTrack</h1>
+            <span class="text-[10px] uppercase font-black tracking-wider px-2 py-0.5 rounded-full bg-indigo-500/25 text-indigo-300 border border-indigo-400/30">Phase 1 &amp; 2</span>
+          </div>
+          <p class="text-[11px] text-slate-400 hidden sm:block">Attendance Calculator, OD Simulator &amp; AI Advisor</p>
+        </div>
+      </div>
+
+      <!-- Center: Section Selector -->
+      <div class="flex-1 max-w-xs mx-2 hidden md:block">
+        <select
+          id="sectionSelector"
+          class="w-full cursor-pointer text-xs font-semibold px-3 py-2 focus:outline-none truncate"
+          title="Switch between the 10 class sections"
+        >
+          <!-- Populated via JS -->
+        </select>
+      </div>
+
+      <!-- Right Actions -->
+      <div class="flex items-center space-x-2">
+        <button id="openSetupWizardBtn"
+          class="flex items-center space-x-1.5 text-xs bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-300 px-3 py-2 rounded-xl font-bold transition border border-indigo-400/25 cursor-pointer"
+          title="Interactive Setup Wizard">
+          <span>⚡</span><span class="hidden sm:inline">Setup</span>
+        </button>
+
+        <button id="openDatasetModalBtn"
+          class="flex items-center space-x-1.5 text-xs bg-white/8 hover:bg-white/14 text-slate-300 px-3 py-2 rounded-xl font-medium transition border border-white/10 cursor-pointer"
+          title="Google Drive Dataset &amp; Timetable Importer">
+          <svg class="w-4 h-4 text-emerald-400 shrink-0" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12.01 1.986L7.02 10.63h13.97l-4.99-8.644h-3.99zM6.16 12.13L1.17 20.774l4.01 6.94 4.99-8.644-4.01-6.94zm11.68 0l-4.99 8.644 4.01 6.94 4.99-8.644-4.01-6.94z"/>
+          </svg>
+          <span class="hidden lg:inline">Dataset</span>
+        </button>
+
+        <button id="printReportBtn" onclick="window.print()"
+          class="p-2 rounded-xl bg-white/8 hover:bg-white/14 text-slate-400 hover:text-white transition border border-white/10 cursor-pointer"
+          title="Print Official Attendance Audit Report (PDF)">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+          </svg>
+        </button>
+
+        <button id="themeToggleBtn"
+          class="p-2 rounded-xl bg-white/8 hover:bg-white/14 text-amber-400 transition border border-white/10 cursor-pointer"
+          title="Toggle Theme">
+          <svg class="w-4 h-4 dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+          </svg>
+          <svg class="w-4 h-4 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 9H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Section Selector -->
+    <div class="px-4 py-2 border-t border-white/8 md:hidden">
+      <select id="sectionSelectorMobile" class="w-full text-xs font-semibold px-2 py-1.5 focus:outline-none rounded-xl">
+        <!-- Synced via JS -->
+      </select>
+    </div>
+  </header>
+
+  <!-- ═════════════════════════════════
+       QUICK PERSONA PRESETS BAR
+       ═════════════════════════════════ -->
+  <div class="border-b border-white/8 py-2 no-print" style="background:rgba(12,14,22,0.5);backdrop-filter:blur(20px);">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-wrap items-center justify-between gap-2 text-xs">
+      <span class="text-indigo-400 font-bold uppercase tracking-widest text-[10px] flex items-center gap-1.5 shrink-0">
+        🎯 Quick Presets
+      </span>
+      <div class="flex items-center space-x-2 overflow-x-auto py-0.5">
+        <button type="button" onclick="applyStudentPreset('detention')"
+          class="px-3 py-1.5 rounded-full bg-red-500/15 hover:bg-red-500/28 text-red-300 font-bold border border-red-400/25 transition flex items-center space-x-1.5 cursor-pointer whitespace-nowrap">
+          <span>🚨</span><span>Detention Risk</span>
+        </button>
+        <button type="button" onclick="applyStudentPreset('borderline')"
+          class="px-3 py-1.5 rounded-full bg-amber-500/15 hover:bg-amber-500/28 text-amber-300 font-semibold border border-amber-400/25 transition flex items-center space-x-1.5 cursor-pointer whitespace-nowrap">
+          <span>⚠️</span><span>Borderline (74%)</span>
+        </button>
+        <button type="button" onclick="applyStudentPreset('balanced')"
+          class="px-3 py-1.5 rounded-full bg-blue-500/15 hover:bg-blue-500/28 text-blue-300 font-semibold border border-blue-400/25 transition flex items-center space-x-1.5 cursor-pointer whitespace-nowrap">
+          <span>⚡</span><span>Balanced (82%)</span>
+        </button>
+        <button type="button" onclick="applyStudentPreset('elite')"
+          class="px-3 py-1.5 rounded-full bg-emerald-500/15 hover:bg-emerald-500/28 text-emerald-300 font-semibold border border-emerald-400/25 transition flex items-center space-x-1.5 cursor-pointer whitespace-nowrap">
+          <span>🌟</span><span>Honor Roll (&gt;90%)</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════
+       iOS PILL NAVIGATION TABS
+       ════════════════════════════════ -->
+  <div class="border-b border-white/8 no-print" style="background:rgba(12,14,22,0.38);backdrop-filter:blur(16px);">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex overflow-x-auto space-x-1 py-2.5">
+      <button data-tab="calculator"
+        class="nav-tab-btn ios-tab-pill active flex items-center space-x-2 whitespace-nowrap cursor-pointer">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+        </svg>
+        <span>Core Calculator</span>
+      </button>
+      <button data-tab="visuals"
+        class="nav-tab-btn ios-tab-pill flex items-center space-x-2 whitespace-nowrap cursor-pointer">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/>
+        </svg>
+        <span>Analytics</span>
+      </button>
+      <button data-tab="od-simulator"
+        class="nav-tab-btn ios-tab-pill flex items-center space-x-2 whitespace-nowrap cursor-pointer">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+        </svg>
+        <span>OD Simulator</span>
+        <span id="odStatusIndicator" class="text-[10px] px-2 py-0.5 rounded-full bg-white/12 text-slate-300 font-mono font-bold">0</span>
+      </button>
+      <button data-tab="timetable"
+        class="nav-tab-btn ios-tab-pill flex items-center space-x-2 whitespace-nowrap cursor-pointer">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+        </svg>
+        <span>Timetable</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════
+       MAIN CONTENT
+       ════════════════════════════════ -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full space-y-5">
+
+    <!-- LOUD WARNING SYSTEM: IRREVERSIBLE DETENTION ALERT -->
+    <div
+      id="irreversibleDetentionBanner"
+      class="hidden animate-alert-pulse bg-gradient-to-r from-red-700 via-rose-700 to-red-800 text-white p-5 rounded-3xl shadow-2xl border-2 border-red-500 relative overflow-hidden"
+    >
+      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 relative z-10">
+        <div class="flex items-center space-x-4">
+          <div class="w-14 h-14 rounded-2xl bg-white/15 backdrop-blur-md flex items-center justify-center text-3xl animate-siren shrink-0">
+            🚨
+          </div>
+          <div>
+            <div class="flex items-center space-x-2.5">
+              <span class="px-2.5 py-0.5 text-[11px] font-black uppercase tracking-wider bg-white text-red-700 rounded-md">Critical Alert</span>
+              <h3 class="text-xl sm:text-2xl font-black tracking-tight">IRREVERSIBLE DETENTION DETECTED</h3>
+            </div>
+            <p class="text-xs sm:text-sm text-red-100 mt-1 max-w-3xl leading-relaxed">
+              Attendance in one or more subjects is so low that it is <strong>mathematically impossible to recover before November</strong>. Even attending 100% of remaining classes cannot reach the statutory 75% requirement.
+            </p>
+          </div>
+        </div>
+        <div class="flex items-center space-x-2 shrink-0">
+          <button id="speakWarningBtn" type="button" onclick="speakDetentionWarning()"
+            class="bg-red-800/80 hover:bg-red-900 text-white font-bold px-3 py-2 rounded-xl text-xs transition flex items-center space-x-1.5 border border-red-400/40 cursor-pointer">
+            <span>🗣️ Voice Alert</span>
+          </button>
+          <button type="button" onclick="document.querySelector('[data-tab=od-simulator]').click()"
+            class="bg-white text-red-700 hover:bg-red-50 font-black px-4 py-2 rounded-xl text-xs shadow-md transition flex items-center space-x-1.5 transform hover:scale-105 cursor-pointer">
+            <span>Simulate OD Rescue</span>
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="mt-4 pt-3 border-t border-red-400/40 bg-black/15 rounded-2xl p-3.5">
+        <div class="flex justify-between items-center mb-1">
+          <span class="text-xs uppercase font-extrabold text-red-200 tracking-wider">Unrecoverable Shortfalls (Before November):</span>
+          <span class="text-[11px] text-red-200">Required: 75.0%</span>
+        </div>
+        <div id="irreversibleSubjectList" class="mt-1 divide-y divide-red-500/30">
+          <!-- Populated via JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Section Header & Live Date Bar -->
+    <div class="glass-card rounded-3xl p-5 border border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div>
+        <div class="flex items-center space-x-3 flex-wrap gap-y-2">
+          <h2 id="activeSectionTitle" class="text-lg sm:text-xl font-bold text-white">Section 1: CSE - A</h2>
+          <span id="activeSectionDept" class="text-xs px-2.5 py-1 rounded-full bg-indigo-500/20 text-indigo-300 font-semibold border border-indigo-400/25">Computer Science &amp; Engineering</span>
+        </div>
+        <p class="text-xs text-slate-400 mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
+          <span>🏛️ <strong id="activeSectionHall" class="text-slate-300">LH-301</strong></span>
+          <span>•</span>
+          <span>👤 Coordinator: <strong id="activeSectionCoord" class="text-slate-300">Dr. Arvind Sharma</strong></span>
+          <span>•</span>
+          <span>🏁 Semester End: <strong class="text-indigo-400 font-bold">October 31, 2026</strong></span>
+        </p>
+      </div>
+      <div class="flex items-center space-x-2 shrink-0">
+        <div class="bg-indigo-500/10 border border-indigo-400/20 rounded-2xl p-2.5 flex items-center space-x-2.5">
+          <span class="text-lg">🗓️</span>
+          <div>
+            <span class="text-[10px] text-indigo-400 uppercase font-black tracking-wide block">Today</span>
+            <span id="currentDateDisplay" class="font-bold text-xs text-white">Mon, Sep 28, 2026</span>
+          </div>
+        </div>
+        <button type="button" onclick="openWhatIfModal()"
+          class="bg-white/8 hover:bg-white/14 text-white font-bold text-xs px-3.5 py-2.5 rounded-2xl border border-white/12 transition flex items-center space-x-1.5 cursor-pointer">
+          <span>🔮</span>
+          <span>What-If Planner</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Date Horizon & Planning Parameters -->
+    <div class="glass-card rounded-3xl p-5 border border-white/10">
+      <div class="flex items-center justify-between border-b border-white/8 pb-3 mb-4">
+        <div class="flex items-center space-x-2">
+          <span class="text-base">⏱️</span>
+          <h3 class="font-bold text-sm text-white">Date Intelligence &amp; Semester Horizon</h3>
+        </div>
+        <span class="text-xs text-slate-500 hidden sm:inline">Excludes weekends &amp; national holidays</span>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Today's Date -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1">
+            Current Date <span class="text-[10px] font-normal text-indigo-400">(Auto-detected)</span>
+          </label>
+          <input type="date" id="todayDateInput" class="w-full px-3 py-2 text-xs font-semibold" />
+        </div>
+        <!-- Planning Date -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1">Preferred Future Planning Date</label>
+          <input type="date" id="planningDateInput" class="w-full px-3 py-2 text-xs font-semibold" />
+        </div>
+        <!-- Semester End -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1">
+            Semester End Date <span class="text-[10px] font-normal text-slate-500">(Before Nov)</span>
+          </label>
+          <input type="date" id="semEndDateInput" class="w-full px-3 py-2 text-xs font-semibold" />
+        </div>
+        <!-- Danger Zone Cutoff Slider -->
+        <div>
+          <div class="flex justify-between items-center mb-1">
+            <label class="text-xs font-semibold text-slate-400">
+              Danger Zone Cutoff: <span id="dangerThresholdLabel" class="text-red-400 font-bold">75%</span>
+            </label>
+            <label class="inline-flex items-center cursor-pointer text-[10px] text-slate-500">
+              <input type="checkbox" id="audioAlertToggle" checked class="sr-only peer" />
+              <div class="relative w-7 h-4 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-white after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-red-500"></div>
+              <span class="ml-1 font-medium">🔊</span>
+            </label>
+          </div>
+          <input type="range" min="65" max="85" value="75" id="dangerThresholdSlider"
+            class="w-full cursor-pointer mt-1" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Overall Metrics & SVG Gauge Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
+      <!-- Gauge Card -->
+      <div class="glass-card rounded-3xl p-5 border border-white/10 flex items-center space-x-4">
+        <div class="relative w-20 h-20 shrink-0">
+          <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+            <path class="text-white/10" stroke-width="3.5" stroke="currentColor" fill="none"
+              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+            <path id="overallGaugeCircle" class="gauge-circle text-indigo-500"
+              stroke-dasharray="100, 100" stroke-dashoffset="25" stroke-width="3.5"
+              stroke-linecap="round" stroke="currentColor" fill="none"
+              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+          </svg>
+          <div class="absolute inset-0 flex items-center justify-center">
+            <span id="overallAttendancePct" class="text-sm font-black text-white font-mono">--%</span>
+          </div>
+        </div>
+        <div>
+          <span class="text-xs font-semibold text-slate-400 block">Overall Standing</span>
+          <span id="overallStatusBadge" class="mt-1 inline-block px-2 py-0.5 text-[10px] font-black rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/25">CALCULATING</span>
+          <span id="dangerCountBadge" class="text-[11px] text-slate-500 block mt-1 font-medium">Analyzing risks...</span>
+        </div>
+      </div>
+
+      <!-- Total Classes Left -->
+      <div class="glass-card rounded-3xl p-5 border border-white/10">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold text-slate-400">Total Classes Left</span>
+          <span class="text-[11px] text-indigo-400 font-bold uppercase tracking-wider">Until Nov</span>
+        </div>
+        <div class="mt-2 flex items-baseline space-x-2">
+          <span id="totalClassesLeft" class="text-3xl font-black text-indigo-400 font-mono">--</span>
+          <span class="text-xs text-slate-500">periods</span>
+        </div>
+        <span class="text-xs text-slate-500 mt-1 block">Full semester remaining</span>
+      </div>
+
+      <!-- Planning Horizon -->
+      <div class="glass-card rounded-3xl p-5 border border-white/10">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold text-slate-400">Planning Horizon</span>
+          <span class="text-[11px] text-purple-400 font-bold uppercase tracking-wider">Milestone</span>
+        </div>
+        <div class="mt-2 flex items-baseline space-x-2">
+          <span id="planningClassesLeft" class="text-3xl font-black text-purple-400 font-mono">--</span>
+          <span class="text-xs text-slate-500">classes</span>
+        </div>
+        <span class="text-xs text-slate-500 mt-1 block">Until preferred future date</span>
+      </div>
+
+      <!-- Max Possible -->
+      <div class="glass-card rounded-3xl p-5 border border-white/10">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold text-slate-400">Max Attainable %</span>
+          <span class="text-[11px] text-emerald-400 font-bold uppercase tracking-wider">100% Run</span>
+        </div>
+        <div class="mt-2 flex items-baseline space-x-2">
+          <span id="maxPossibleOverall" class="text-3xl font-black text-emerald-400 font-mono">--%</span>
+        </div>
+        <span class="text-xs text-slate-500 mt-1 block">If 100% attended from today</span>
+      </div>
+    </div>
+
+    <!-- Today's Schedule Live Strip -->
+    <div id="todayScheduleStrip" class="glass-card rounded-3xl p-4 border border-white/10">
+      <div class="flex items-center justify-between mb-2.5">
+        <div class="flex items-center space-x-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+          <h4 class="text-xs font-bold uppercase tracking-wider text-slate-300">Today's Schedule (<span id="todayDayNameLabel">Today</span>)</h4>
+        </div>
+        <span class="text-[11px] text-slate-500">Period-by-Period Roadmap</span>
+      </div>
+      <div id="todaySlotsContainer" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
+        <!-- Rendered by app.js -->
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════
+         TAB 1: CORE CALCULATOR (Phase 1)
+         ══════════════════════════════ -->
+    <section id="tab-content-calculator" class="tab-content-panel space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div>
+          <h3 class="text-base font-bold text-white">Subject Attendance &amp; Danger Zone Engine</h3>
+          <p class="text-xs text-slate-400">Enter percentage for each subject. Instantly shows classes required for 75%, 90% target, safe bunks, or detention warnings.</p>
+        </div>
+      </div>
+      <!-- Subject Cards Grid -->
+      <div id="subjectCardsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Rendered by app.js -->
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════
+         TAB 2: VISUAL TRACKING (Phase 2)
+         ══════════════════════════════ -->
+    <section id="tab-content-visuals" class="tab-content-panel hidden space-y-6">
+      <div>
+        <h3 class="text-base font-bold text-white">Visual Attendance Health Dashboard</h3>
+        <p class="text-xs text-slate-400">Interactive Chart.js visualizations tracking subject health, cumulative distributions, and projected trajectories.</p>
+      </div>
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <!-- Chart 1: Bar -->
+        <div class="lg:col-span-2 glass-card p-5 rounded-3xl border border-white/10">
+          <div class="flex items-center justify-between mb-4">
+            <h4 class="text-sm font-bold text-white">Current vs Max Attainable %</h4>
+            <span class="text-[11px] text-slate-500">75% Danger | 90% Elite</span>
+          </div>
+          <div class="chart-container"><canvas id="subjectBarChart"></canvas></div>
+        </div>
+        <!-- Chart 2: Doughnut -->
+        <div class="glass-card p-5 rounded-3xl border border-white/10">
+          <div class="flex items-center justify-between mb-4">
+            <h4 class="text-sm font-bold text-white">Semester Breakdown</h4>
+            <span class="text-[11px] text-slate-500">Cumulative</span>
+          </div>
+          <div class="chart-container"><canvas id="breakdownDoughnutChart"></canvas></div>
+        </div>
+      </div>
+      <!-- Chart 3: Trajectory -->
+      <div class="glass-card p-5 rounded-3xl border border-white/10">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <h4 class="text-sm font-bold text-white">Projected Attendance Trajectory (4 Scenarios)</h4>
+            <p class="text-xs text-slate-500">Day-by-day projected path from Today until October 31 under 100%, 75%, 50%, and 0% attendance rates.</p>
+          </div>
+        </div>
+        <div class="chart-container" style="height: 320px;"><canvas id="trajectoryLineChart"></canvas></div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════
+         TAB 3: OD SIMULATOR (Phase 2)
+         ══════════════════════════════ -->
+    <section id="tab-content-od-simulator" class="tab-content-panel hidden space-y-6">
+      <div class="glass-card rounded-3xl p-6 border border-white/10 space-y-6">
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="text-xl">🏆</span>
+            <h3 class="text-lg font-bold text-white">On-Duty (OD) &amp; Medical Leave Simulator</h3>
+          </div>
+          <p class="text-xs text-slate-400 mt-1">
+            Simulate attending technical symposiums, sports tournaments, NSS camps, hackathons, or claiming official medical leaves. Watch OD credits instantly restore your attendance.
+          </p>
+        </div>
+        <!-- Add Leave Input Form -->
+        <div class="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-4">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-slate-300">Add New OD / Medical Leave Entry</h4>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-400 mb-1">Leave Category</label>
+              <select id="odTypeSelect" class="w-full px-3 py-2 text-xs font-medium">
+                <option value="OD - Hackathon">On-Duty: Hackathon / Coding Contest</option>
+                <option value="OD - Symposium">On-Duty: Technical Symposium</option>
+                <option value="OD - Sports">On-Duty: Sports / Inter-Collegiate</option>
+                <option value="OD - Cultural">On-Duty: Cultural / NSS / NCC</option>
+                <option value="Medical Leave">Medical Leave (Doctor Certificate)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-400 mb-1">Number of Days</label>
+              <input type="number" id="odDaysInput" min="1" max="15" value="2" class="w-full px-3 py-2 text-xs font-bold font-mono" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-400 mb-1">Target Subjects</label>
+              <select id="odSubjectTargetSelect" class="w-full px-3 py-2 text-xs font-medium">
+                <!-- Populated dynamically -->
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-400 mb-1">Event / Reason</label>
+              <input type="text" id="odReasonInput" placeholder="e.g. Smart India Hackathon" class="w-full px-3 py-2 text-xs" />
+            </div>
+          </div>
+          <div class="flex justify-end">
+            <button id="addOdBtn"
+              class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-lg shadow-indigo-500/30 transition flex items-center space-x-1.5 transform hover:scale-105 cursor-pointer border border-indigo-400/30">
+              <span>+ Apply OD Simulation</span>
+            </button>
+          </div>
+        </div>
+        <!-- Active OD Records -->
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Simulated Leave Entries</h4>
+          <div id="odRecordsList" class="space-y-2"><!-- Populated via JS --></div>
+        </div>
+        <!-- Comparison Table -->
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Before OD vs After OD Impact Comparison</h4>
+          <div class="overflow-x-auto border border-white/10 rounded-2xl">
+            <table class="w-full text-xs text-left">
+              <thead class="bg-white/5 text-slate-300 border-b border-white/10">
+                <tr>
+                  <th class="py-2.5 px-3">Subject Name</th>
+                  <th class="py-2.5 px-3 text-center">Base %</th>
+                  <th class="py-2.5 px-3 text-center">Post-OD %</th>
+                  <th class="py-2.5 px-3 text-center">Boost</th>
+                  <th class="py-2.5 px-3 text-right">Status</th>
+                </tr>
+              </thead>
+              <tbody id="odComparisonTableBody" class="divide-y divide-white/8">
+                <!-- Populated via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════
+         TAB 4: WEEKLY TIMETABLE
+         ══════════════════════════════ -->
+    <section id="tab-content-timetable" class="tab-content-panel hidden space-y-4">
+      <div class="glass-card rounded-3xl p-6 border border-white/10 space-y-4">
+        <div>
+          <h3 class="text-base font-bold text-white">Active Section Timetable (Monday – Friday)</h3>
+          <p class="text-xs text-slate-400">6 periods daily with tea &amp; lunch intervals.</p>
+        </div>
+        <div id="weeklyTimetableContainer"><!-- Populated via JS --></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ════════════════════════════════════════
+       SETUP WIZARD MODAL — iOS Sheet
+       ════════════════════════════════════════ -->
+  <div id="setupWizardModal" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-xl flex items-center justify-center p-4">
+    <div class="ios-modal-sheet max-w-xl w-full p-6 space-y-5">
+      <div class="ios-modal-handle"></div>
+      <div class="flex items-center justify-between border-b border-white/10 pb-3">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-lg shadow-indigo-500/30">⚡</div>
+          <div>
+            <h3 class="text-base font-bold text-white">Quick Setup &amp; Profile Wizard</h3>
+            <span class="text-xs text-slate-500">Configure all academic parameters in seconds</span>
+          </div>
+        </div>
+        <button id="closeSetupWizardBtn" class="text-slate-500 hover:text-white text-lg cursor-pointer transition">✕</button>
+      </div>
+      <!-- Step 1: Section -->
+      <div>
+        <label class="block text-xs font-bold text-slate-300 mb-1">Step 1: Select Your Class Section</label>
+        <select id="wizardSectionSelect" class="w-full px-3 py-2.5 text-xs font-semibold"><!-- Populated via JS --></select>
+      </div>
+      <!-- Step 2: Threshold -->
+      <div>
+        <label class="block text-xs font-bold text-slate-300 mb-1">Step 2: Choose Danger Threshold</label>
+        <div class="grid grid-cols-3 gap-2">
+          <button type="button" onclick="setWizardThreshold(75, this)"
+            class="wizard-thresh-btn p-2.5 rounded-xl border border-indigo-500 bg-indigo-500/20 text-indigo-300 text-xs font-bold cursor-pointer transition">
+            75% (AICTE)
+          </button>
+          <button type="button" onclick="setWizardThreshold(80, this)"
+            class="wizard-thresh-btn p-2.5 rounded-xl border border-white/12 text-slate-400 text-xs font-semibold cursor-pointer hover:border-white/25 transition">
+            80% (Strict)
+          </button>
+          <button type="button" onclick="setWizardThreshold(85, this)"
+            class="wizard-thresh-btn p-2.5 rounded-xl border border-white/12 text-slate-400 text-xs font-semibold cursor-pointer hover:border-white/25 transition">
+            85% (Auto)
+          </button>
+        </div>
+      </div>
+      <!-- Step 3: Preset -->
+      <div>
+        <label class="block text-xs font-bold text-slate-300 mb-1">Step 3: Choose Quick Starting Profile</label>
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <div onclick="setWizardPreset('detention', this)"
+            class="wizard-preset-card p-3 rounded-xl border border-red-500/30 bg-red-500/10 cursor-pointer hover:border-red-400/60 transition">
+            <span class="font-bold text-red-300">🚨 Detention Scenario</span>
+            <p class="text-[11px] text-slate-500 mt-0.5">Low attendance triggering Irreversible Detention alert.</p>
+          </div>
+          <div onclick="setWizardPreset('balanced', this)"
+            class="wizard-preset-card p-3 rounded-xl border border-indigo-500/40 bg-indigo-500/12 cursor-pointer hover:border-indigo-400/60 transition ring-2 ring-indigo-500/40">
+            <span class="font-bold text-indigo-300">⚡ Balanced (82%)</span>
+            <p class="text-[11px] text-slate-500 mt-0.5">Standard average attendance profile.</p>
+          </div>
+        </div>
+      </div>
+      <div class="flex justify-end pt-2 border-t border-white/10">
+        <button id="applyWizardBtn"
+          class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-5 py-2.5 rounded-xl text-xs shadow-lg shadow-indigo-500/30 transition cursor-pointer border border-indigo-400/30">
+          Apply Configuration ✓
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════
+       WHAT-IF PLANNER MODAL — iOS Sheet
+       ════════════════════════════════════════ -->
+  <div id="whatIfModal" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-xl flex items-center justify-center p-4">
+    <div class="ios-modal-sheet max-w-md w-full p-6 space-y-4">
+      <div class="ios-modal-handle"></div>
+      <div class="flex items-center justify-between border-b border-white/10 pb-3">
+        <div class="flex items-center space-x-2">
+          <span class="text-xl">🔮</span>
+          <h3 class="text-base font-bold text-white">Attendance What-If Planner</h3>
+        </div>
+        <button onclick="closeWhatIfModal()" class="text-slate-500 hover:text-white text-lg cursor-pointer transition">✕</button>
+      </div>
+      <div class="space-y-3.5 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">Select Subject</label>
+          <select id="whatIfSubjectSelect" class="w-full px-3 py-2.5 text-xs font-medium"></select>
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">Simulation Mode</label>
+          <div class="grid grid-cols-2 gap-2">
+            <button type="button" id="whatIfModeMissBtn" onclick="setWhatIfMode('miss')"
+              class="p-2.5 rounded-xl border border-indigo-500 bg-indigo-500/20 text-indigo-300 font-bold text-xs cursor-pointer">
+              📉 Miss Classes
+            </button>
+            <button type="button" id="whatIfModeAttendBtn" onclick="setWhatIfMode('attend')"
+              class="p-2.5 rounded-xl border border-white/12 text-slate-400 font-medium text-xs cursor-pointer hover:border-white/25 transition">
+              📈 Attend Classes
+            </button>
+          </div>
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-300 mb-2">Number of Classes</label>
+          <div class="flex items-center space-x-3">
+            <input type="number" id="whatIfMissCount" min="1" max="25" value="3"
+              class="w-20 px-2 py-2 font-bold font-mono text-center text-xs" />
+            <button type="button" onclick="calculateWhatIf()"
+              class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-3 py-2 rounded-xl cursor-pointer text-xs transition border border-indigo-400/30">
+              Calculate
+            </button>
+          </div>
+        </div>
+        <div id="whatIfResultBox" class="p-3.5 rounded-2xl bg-white/5 border border-white/10 space-y-1">
+          <span class="text-[11px] text-slate-500 block">Select subject and count to see projection.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════
+       DATASET MODAL — iOS Sheet
+       ════════════════════════════════════════ -->
+  <div id="datasetModal" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-xl flex items-center justify-center p-4">
+    <div class="ios-modal-sheet max-w-lg w-full p-6 space-y-4">
+      <div class="ios-modal-handle"></div>
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <span class="text-xl">📂</span>
+          <h3 class="text-base font-bold text-white">Timetable Dataset &amp; Google Drive Sync</h3>
+        </div>
+        <button id="closeDatasetModalBtn" class="text-slate-500 hover:text-white cursor-pointer transition text-lg">✕</button>
+      </div>
+      <p class="text-xs text-slate-400">
+        All 10 class sections come pre-loaded with engineering timetables. You can sync a live Google Drive link or paste custom JSON/CSV datasets below.
+      </p>
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Google Drive Dataset URL</label>
+          <div class="flex space-x-2">
+            <input type="url" id="googleDriveUrlInput"
+              placeholder="https://drive.google.com/drive/folders/..."
+              value="https://drive.google.com/drive/folders/1A2b3C_Timetables_2026"
+              class="w-full px-3 py-2 text-xs" />
+            <button id="loadGoogleDriveBtn"
+              class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-2 rounded-xl text-xs shrink-0 cursor-pointer transition border border-emerald-400/30">
+              Sync
+            </button>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Or Paste Custom Timetable JSON</label>
+          <textarea id="customJsonInput" rows="4"
+            placeholder='{"SEC-1": { "name": "Section 1", "subjects": [...], "schedule": {...} }}'
+            class="w-full px-3 py-2 text-xs font-mono rounded-2xl"></textarea>
+          <button id="parseJsonDatasetBtn"
+            class="mt-2 w-full bg-white/8 hover:bg-white/14 font-bold py-2 rounded-xl text-xs text-slate-200 border border-white/12 cursor-pointer transition">
+            Import JSON Dataset
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════
+       FLOATING ATTENDY CHATBOT — iOS Glass
+       ════════════════════════════════════════ -->
+  <div class="fixed bottom-5 right-5 z-50 no-print">
+    <!-- FAB Button -->
+    <button id="aiChatToggleBtn"
+      class="animate-ai-glow bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white p-3.5 rounded-full shadow-2xl shadow-indigo-500/40 flex items-center space-x-2.5 transition transform hover:scale-105 cursor-pointer"
+      title="Chat with Attendy - Your Friendly Attendance Companion">
+      <div class="relative flex items-center justify-center">
+        <span class="text-2xl animate-attendy">🤖</span>
+        <span class="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full border-2 border-indigo-600"></span>
+      </div>
+      <div class="text-left pr-1.5 hidden sm:block">
+        <div class="font-extrabold text-xs leading-none">Chat with Attendy</div>
+        <span class="text-[9px] text-indigo-200 font-medium">Friendly AI Buddy 😊</span>
+      </div>
+    </button>
+
+    <!-- Chat Drawer — iOS Modal Sheet -->
+    <div id="aiChatDrawer"
+      class="hidden absolute bottom-16 right-0 w-[calc(100vw-2.5rem)] sm:w-[430px] rounded-3xl overflow-hidden flex flex-col h-[560px] animate-chat-appear"
+      style="background: rgba(18,22,36,0.9); backdrop-filter: blur(36px) saturate(220%); border: 1px solid rgba(255,255,255,0.16); box-shadow: inset 0 1px 1px rgba(255,255,255,0.22), 0 30px 70px -15px rgba(0,0,0,0.9);">
+
+      <!-- Chat Header -->
+      <div class="bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 text-white p-4 flex items-center justify-between shrink-0">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-xl shadow-inner animate-attendy">🤖</div>
+          <div>
+            <div class="flex items-center space-x-1.5">
+              <h4 class="font-extrabold text-sm">Attendy</h4>
+              <span class="px-1.5 rounded-full bg-emerald-400/30 text-emerald-200 text-[10px] font-bold">● Online</span>
+            </div>
+            <span class="text-[10px] text-indigo-200 block">Your Friendly Attendance Buddy</span>
+          </div>
+        </div>
+        <div class="flex items-center space-x-1">
+          <button id="chatVoiceToggleBtn" onclick="toggleChatVoice()"
+            class="p-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/12 transition cursor-pointer text-xs" title="Toggle Voice Replies">
+            <span id="voiceToggleIcon">🔊</span>
+          </button>
+          <button id="clearChatBtn" onclick="clearChatHistory()"
+            class="p-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/12 transition cursor-pointer text-xs" title="Clear Chat">
+            🗑️
+          </button>
+          <button id="aiChatCloseBtn" class="p-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/12 text-base cursor-pointer transition">✕</button>
+        </div>
+      </div>
+
+      <!-- Messages Area -->
+      <div id="aiChatMessages" class="flex-1 p-4 overflow-y-auto space-y-3.5 text-xs"
+        style="background: rgba(10,12,22,0.6);">
+        <!-- Rendered by app.js -->
+      </div>
+
+      <!-- Quick Chips -->
+      <div class="p-2.5 border-t border-white/10 flex flex-wrap gap-1.5 shrink-0"
+        style="background: rgba(18,22,36,0.8);">
+        <button class="ai-quick-chip text-[11px] bg-indigo-500/18 hover:bg-indigo-500/30 text-indigo-300 px-2.5 py-1 rounded-full border border-indigo-400/25 transition cursor-pointer"
+          data-query="If I take a 3-day sick leave starting tomorrow, will my Chemistry attendance drop below 75%?">
+          💊 3-day leave on Chemistry
+        </button>
+        <button class="ai-quick-chip text-[11px] bg-white/8 hover:bg-white/14 text-slate-300 px-2.5 py-1 rounded-full border border-white/12 transition cursor-pointer"
+          data-query="How many classes can I bunk in Maths and stay above 75%?">
+          🎯 Maths bunk buffer
+        </button>
+        <button class="ai-quick-chip text-[11px] bg-white/8 hover:bg-white/14 text-slate-300 px-2.5 py-1 rounded-full border border-white/12 transition cursor-pointer"
+          data-query="Can I take this Friday off without getting detained?">
+          📅 Friday off check
+        </button>
+        <button class="ai-quick-chip text-[11px] bg-rose-500/15 hover:bg-rose-500/28 text-rose-300 px-2.5 py-1 rounded-full border border-rose-400/25 transition cursor-pointer"
+          data-query="I am stressed about my attendance, help me out!">
+          💙 Need encouragement!
+        </button>
+      </div>
+
+      <!-- Input Bar -->
+      <div class="p-2.5 border-t border-white/10 flex items-center space-x-2 shrink-0"
+        style="background: rgba(18,22,36,0.85);">
+        <input type="text" id="aiChatInput"
+          placeholder="Ask Attendy anything about leaves, bunks, or schedules..."
+          class="flex-1 text-xs bg-white/8 border border-white/12 rounded-2xl px-3.5 py-2.5 text-slate-100 placeholder-slate-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none focus:bg-white/12 transition" />
+        <button id="aiChatSendBtn"
+          class="bg-indigo-600 hover:bg-indigo-500 text-white px-3.5 py-2.5 rounded-2xl text-xs font-bold transition shrink-0 cursor-pointer shadow-lg shadow-indigo-500/30 flex items-center space-x-1 border border-indigo-400/30">
+          <span>Send</span><span>🚀</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="border-t border-white/8 py-4 mt-auto no-print" style="background:rgba(12,14,22,0.5);backdrop-filter:blur(16px);">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
+      <span>EduTrack Attendance &amp; Detention Advisor System • Phase 1 &amp; 2 Finale</span>
+      <div class="flex items-center space-x-4">
+        <span>University Academic Standard (75% Statutory Limit)</span>
+        <button onclick="window.scrollTo({top:0, behavior:'smooth'})" class="text-indigo-400 font-bold hover:text-indigo-300 cursor-pointer transition">↑ Top</button>
+      </div>
+    </div>
+  </footer>
+
+  </div><!-- end relative z-10 wrapper -->
+
+  <!-- Scripts -->
+  <script src="timetables.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
